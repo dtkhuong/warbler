@@ -1,7 +1,6 @@
 import os
 
 from flask import Flask, render_template, request, flash, redirect, session, g
-from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
 from forms import UserAddForm, LoginForm, MessageForm, EditForm
@@ -13,17 +12,14 @@ app = Flask(__name__)
 
 # Get DB_URI from environ variable (useful for production/testing) or,
 # if not set there, use development local db.
-app.config['SQLALCHEMY_DATABASE_URI'] = (
-    os.environ.get('DATABASE_URL', 'postgres:///warbler'))
+app.config['SQLALCHEMY_DATABASE_URI'] = (os.environ.get(
+    'DATABASE_URL', 'postgres:///warbler'))
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
-app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', "it's a secret")
-toolbar = DebugToolbarExtension(app)
 
 connect_db(app)
-
 
 ##############################################################################
 # User signup/login/logout
@@ -100,8 +96,7 @@ def login():
     form = LoginForm()
 
     if form.validate_on_submit():
-        user = User.authenticate(form.username.data,
-                                 form.password.data)
+        user = User.authenticate(form.username.data, form.password.data)
 
         if user:
             do_login(user)
@@ -115,6 +110,7 @@ def login():
 
 ##############################################################################
 # General user routes:
+
 
 @app.route('/users')
 def list_users():
@@ -141,12 +137,8 @@ def users_show(user_id):
 
     # snagging messages in order from the database;
     # user.messages won't be in order by default
-    messages = (Message
-                .query
-                .filter(Message.user_id == user_id)
-                .order_by(Message.timestamp.desc())
-                .limit(100)
-                .all())
+    messages = (Message.query.filter(Message.user_id == user_id).order_by(
+        Message.timestamp.desc()).limit(100).all())
     return render_template('users/show.html', user=user, messages=messages)
 
 
@@ -206,24 +198,33 @@ def stop_following(follow_id):
 
 @app.route('/users/profile', methods=["GET", "POST"])
 def profile():
-    """Update profile for current user."""
+    """Update profile for current user."""\
 
-    
-    user = User.query.get(session[CURR_USER_KEY])
-    form = EditForm(obj=user)
-    
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    form = EditForm(obj=g.user)
+
     if form.validate_on_submit():
-        user.username = form.username.data
-        user.email = form.email.data
-        user.image_url = form.image_url.data
-        user.header_image_url = form.header_image_url.data
-        user.bio = form.bio.data
-        
-        db.session.add(user)
-        db.session.commit()
+        user_authenticate = User.authenticate(g.user.username,
+                                              form.password.data)
+        if user_authenticate:
 
-        return redirect(f'/users/{session[CURR_USER_KEY]}')
-    
+            g.user.username = form.username.data
+            g.user.email = form.email.data
+            g.user.image_url = form.image_url.data
+            g.user.header_image_url = form.header_image_url.data
+            g.user.bio = form.bio.data
+
+            db.session.add(g.user)
+            db.session.commit()
+            return redirect(f'/users/{session[CURR_USER_KEY]}')
+
+        else:
+            form.username.errors = ['Invalid password']
+            return render_template('/users/edit.html', form=form)
+
     else:
         return render_template('/users/edit.html', form=form)
 
@@ -246,6 +247,7 @@ def delete_user():
 
 ##############################################################################
 # Messages routes:
+
 
 @app.route('/messages/new', methods=["GET", "POST"])
 def messages_add():
@@ -306,11 +308,18 @@ def homepage():
     """
 
     if g.user:
-        messages = (Message
-                    .query
-                    .order_by(Message.timestamp.desc())
-                    .limit(100)
-                    .all())
+
+        # get list of followers
+        following = g.user.following
+        list_of_following = [follower.id for follower in following]
+
+        # sql query filter messages made by people user is following
+        messages = Message.query.filter(
+            Message.user_id.in_(list_of_following)).order_by(
+            Message.timestamp.desc()).limit(100).all()
+
+        # messages = (Message.query.order_by(
+        #     Message.timestamp.desc()).limit(100).all())
 
         return render_template('home.html', messages=messages)
 
@@ -324,6 +333,7 @@ def homepage():
 #   handled elsewhere)
 #
 # https://stackoverflow.com/questions/34066804/disabling-caching-in-flask
+
 
 @app.after_request
 def add_header(req):
