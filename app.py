@@ -237,10 +237,10 @@ def delete_user():
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    do_logout()
-
     db.session.delete(g.user)
     db.session.commit()
+    
+    do_logout()
 
     return redirect("/signup")
 
