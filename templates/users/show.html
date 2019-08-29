@@ -13,6 +13,21 @@
           </a>
 
           <div class="message-area">
+          
+            {% if message.likes %}
+            <form action="/user/unliking" method="POST">
+              <input type="hidden" name="data-user" value="{{ message.user.id }}">
+              <input type="hidden" name="data-msg" value="{{ message.id }}">
+              <button class="star" type="submit"><i class="fas fa-star"></i></button>
+            </form>
+            {% else %}
+            <form action="/user/liking" method="POST">
+              <input type="hidden" name="data-user" value="{{ message.user.id }}">
+              <input type="hidden" name="data-msg" value="{{ message.id }}">
+              <button class="star" type="submit"><i class="far fa-star"></i></button>
+            </form>
+            {% endif %}
+            
             <a href="/users/{{ user.id }}">@{{ user.username }}</a>
             <span class="text-muted">{{ message.timestamp.strftime('%d %B %Y') }}</span>
             <p>{{ message.text }}</p>
@@ -24,16 +39,3 @@
     </ul>
   </div>
 {% endblock %}
-
-
-
-
-
- <!-- {% else %} -->
-          <!-- <form action="/liking" method="POST">
-            <input type="hidden" name="data-user" value="{{ msg.user.id }}">
-            <input type="hidden" name="data-msg" value="{{ msg.id }}">
-            <button class="star" type="submit"><i class="far fa-star"></i></button>
-          </form>
-        
-          {% endif %} -->

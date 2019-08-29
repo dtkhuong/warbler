@@ -2,7 +2,7 @@ import os
 
 from flask import Flask, render_template, request, flash, redirect, session, g
 from sqlalchemy.exc import IntegrityError
-
+from sqlalchemy import and_
 from forms import UserAddForm, LoginForm, MessageForm, EditForm
 from models import db, connect_db, User, Message, Likes
 
@@ -20,6 +20,7 @@ app.config['SQLALCHEMY_ECHO'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', "it's a secret")
 
 connect_db(app)
+db.create_all()
 
 ##############################################################################
 # User signup/login/logout
@@ -239,7 +240,7 @@ def delete_user():
 
     db.session.delete(g.user)
     db.session.commit()
-    
+
     do_logout()
 
     return redirect("/signup")
@@ -300,18 +301,62 @@ def messages_destroy(message_id):
 @app.route('/liking', methods=["POST"])
 def add_like():
     """Add a like"""
-    user = request.form["data-user"]
-    msg = request.form["data-msg"]
-    
-    new_like = Likes(
-        user_who_liked_id=user,
-        liked_msg_id=msg
-    )
+    user_id = request.form["data-user"]
+    msg_id = request.form["data-msg"]
+
+    new_like = Likes(user_who_liked_id=user_id, liked_msg_id=msg_id)
 
     db.session.add(new_like)
     db.session.commit()
 
     return redirect('/')
+
+
+@app.route('/unliking', methods=['POST'])
+def delete_like():
+    """Remove a like"""
+
+    user_id = request.form["data-user"]
+    msg_id = request.form["data-msg"]
+
+    like_to_be_removed = Likes.query.filter(
+        and_(Likes.user_who_liked_id == user_id,
+             Likes.liked_msg_id == msg_id)).first()
+
+    db.session.delete(like_to_be_removed)
+    db.session.commit()
+
+    return redirect('/')
+
+@app.route('/user/liking', methods=["POST"])
+def add_user_like():
+    """Add a like"""
+    user_id = request.form["data-user"]
+    msg_id = request.form["data-msg"]
+
+    new_like = Likes(user_who_liked_id=user_id, liked_msg_id=msg_id)
+
+    db.session.add(new_like)
+    db.session.commit()
+
+    return redirect(f'/users/{user_id}')
+
+
+@app.route('/user/unliking', methods=['POST'])
+def delete_user_like():
+    """Remove a like"""
+
+    user_id = request.form["data-user"]
+    msg_id = request.form["data-msg"]
+
+    like_to_be_removed = Likes.query.filter(
+        and_(Likes.user_who_liked_id == user_id,
+             Likes.liked_msg_id == msg_id)).first()
+
+    db.session.delete(like_to_be_removed)
+    db.session.commit()
+
+    return redirect(f'/users/{user_id}')
 
 
 ##############################################################################
@@ -335,7 +380,7 @@ def homepage():
         # sql query filter messages made by people user is following
         messages = Message.query.filter(
             Message.user_id.in_(list_of_following)).order_by(
-            Message.timestamp.desc()).limit(100).all()
+                Message.timestamp.desc()).limit(100).all()
 
         likes = Likes.query.all()
 
