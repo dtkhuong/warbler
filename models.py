@@ -90,6 +90,11 @@ class User(db.Model):
         nullable=False,
     )
 
+    likes_counter = db.Column(
+        db.Integer,
+        default=0
+    )
+
     messages = db.relationship('Message')
 
     followers = db.relationship(

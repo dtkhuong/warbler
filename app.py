@@ -140,7 +140,11 @@ def users_show(user_id):
     # user.messages won't be in order by default
     messages = (Message.query.filter(Message.user_id == user_id).order_by(
         Message.timestamp.desc()).limit(100).all())
-    return render_template('users/show.html', user=user, messages=messages)
+
+    # gets count of likes
+    # likes = Likes.query.filter_by(user_who_liked_id=user_id).count()
+    likes = User.query.get(user_id).likes_counter
+    return render_template('users/show.html', user=user, messages=messages, likes=likes)
 
 
 @app.route('/users/<int:user_id>/following')
@@ -306,6 +310,13 @@ def add_like():
 
     new_like = Likes(user_who_liked_id=user_id, liked_msg_id=msg_id)
 
+    current_user = User.query.get(g.user.id)
+    counter_from_db = User.query.get(g.user.id).likes_counter
+    counter_from_db += 1
+
+    current_user.likes_counter = counter_from_db
+    db.session.add(current_user)
+
     db.session.add(new_like)
     db.session.commit()
 
@@ -335,6 +346,13 @@ def add_user_like():
     msg_id = request.form["data-msg"]
 
     new_like = Likes(user_who_liked_id=user_id, liked_msg_id=msg_id)
+
+    current_user = User.query.get(g.user.id)
+    counter_from_db = User.query.get(g.user.id).likes_counter
+    counter_from_db += 1
+
+    current_user.likes_counter = counter_from_db
+    db.session.add(current_user)
 
     db.session.add(new_like)
     db.session.commit()
