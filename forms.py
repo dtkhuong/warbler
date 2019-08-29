@@ -34,3 +34,10 @@ class EditForm(FlaskForm):
     header_image_url = StringField('(Optional) Header Image URL')
     bio = StringField('Bio')
     password = PasswordField('Password', validators=[DataRequired()])
+
+
+# class LikedStarForm(FlaskForm):
+#     """Shows liked star."""
+
+
+# <i class="far fa-star"></i>

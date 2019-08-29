@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, flash, redirect, session, g
 from sqlalchemy.exc import IntegrityError
 
 from forms import UserAddForm, LoginForm, MessageForm, EditForm
-from models import db, connect_db, User, Message
+from models import db, connect_db, User, Message, Likes
 
 CURR_USER_KEY = "curr_user"
 
@@ -296,6 +296,25 @@ def messages_destroy(message_id):
 
 
 ##############################################################################
+# Like routes:
+@app.route('/liking', methods=["POST"])
+def add_like():
+    """Add a like"""
+    user = request.form["data-user"]
+    msg = request.form["data-msg"]
+    
+    new_like = Likes(
+        user_who_liked_id=user,
+        liked_msg_id=msg
+    )
+
+    db.session.add(new_like)
+    db.session.commit()
+
+    return redirect('/')
+
+
+##############################################################################
 # Homepage and error pages
 
 
@@ -318,10 +337,9 @@ def homepage():
             Message.user_id.in_(list_of_following)).order_by(
             Message.timestamp.desc()).limit(100).all()
 
-        # messages = (Message.query.order_by(
-        #     Message.timestamp.desc()).limit(100).all())
+        likes = Likes.query.all()
 
-        return render_template('home.html', messages=messages)
+        return render_template('home.html', messages=messages, likes=likes)
 
     else:
         return render_template('home-anon.html')

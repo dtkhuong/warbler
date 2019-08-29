@@ -538,3 +538,14 @@ p.card-bio {
 .message-404 .form-inline input {
   flex: 1;
 }
+
+/* ================================ star */
+
+.star {
+  position: absolute;
+  right: 0;
+  top: 0;
+  border: 0;
+  background-color: white;
+  z-index: 100;
+}
