@@ -32,13 +32,13 @@ class Likes(db.Model):
 
     __tablename__ = 'likes'
 
-    user_who_liked_id = db.Column(
+    user_id = db.Column(
         db.Integer,
         db.ForeignKey('users.id', ondelete="cascade"),
         primary_key=True,
     )
 
-    liked_msg_id = db.Column(
+    msg_id = db.Column(
         db.Integer,
         db.ForeignKey('messages.id', ondelete="cascade"),
         primary_key=True,
@@ -72,27 +72,16 @@ class User(db.Model):
         default="/static/images/default-pic.png",
     )
 
-    header_image_url = db.Column(
-        db.Text,
-        default="/static/images/warbler-hero.jpg"
-    )
+    header_image_url = db.Column(db.Text,
+                                 default="/static/images/warbler-hero.jpg")
 
-    bio = db.Column(
-        db.Text,
-    )
+    bio = db.Column(db.Text, )
 
-    location = db.Column(
-        db.Text,
-    )
+    location = db.Column(db.Text, )
 
     password = db.Column(
         db.Text,
         nullable=False,
-    )
-
-    likes_counter = db.Column(
-        db.Integer,
-        default=0
     )
 
     messages = db.relationship('Message')
@@ -101,21 +90,17 @@ class User(db.Model):
         "User",
         secondary="follows",
         primaryjoin=(Follows.user_being_followed_id == id),
-        secondaryjoin=(Follows.user_following_id == id)
-    )
+        secondaryjoin=(Follows.user_following_id == id))
 
     following = db.relationship(
         "User",
         secondary="follows",
         primaryjoin=(Follows.user_following_id == id),
-        secondaryjoin=(Follows.user_being_followed_id == id)
-    )
+        secondaryjoin=(Follows.user_being_followed_id == id))
 
-    likes = db.relationship(
-        "User",
-        secondary="likes",
-        primaryjoin=(Likes.user_who_liked_id == id)
-    )
+    likes = db.relationship("User",
+                            secondary="likes",
+                            primaryjoin=(Likes.user_id == id))
 
     def __repr__(self):
         return f"<User #{self.id}: {self.username}, {self.email}>"
@@ -123,13 +108,17 @@ class User(db.Model):
     def is_followed_by(self, other_user):
         """Is this user followed by `other_user`?"""
 
-        found_user_list = [user for user in self.followers if user == other_user]
+        found_user_list = [
+            user for user in self.followers if user == other_user
+        ]
         return len(found_user_list) == 1
 
     def is_following(self, other_user):
         """Is this user following `other_use`?"""
 
-        found_user_list = [user for user in self.following if user == other_user]
+        found_user_list = [
+            user for user in self.following if user == other_user
+        ]
         return len(found_user_list) == 1
 
     @classmethod
@@ -163,9 +152,9 @@ class User(db.Model):
         """
 
         user = cls.query.filter_by(username=username).first()
-        
+
         # import pdb; pdb.set_trace()
-        
+
         if user:
             is_auth = bcrypt.check_password_hash(user.password, password)
             if is_auth:
@@ -203,11 +192,9 @@ class Message(db.Model):
 
     user = db.relationship('User')
 
-    likes = db.relationship(
-        "Message",
-        secondary="likes",
-        primaryjoin=(Likes.liked_msg_id == id)
-    )
+    likes = db.relationship("Message",
+                            secondary="likes",
+                            primaryjoin=(Likes.msg_id == id))
 
 
 def connect_db(app):
