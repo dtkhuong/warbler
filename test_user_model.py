@@ -38,21 +38,17 @@ class UserModelTestCase(TestCase):
         User.query.delete()
         Message.query.delete()
         Follows.query.delete()
-
-        self.client = app.test_client()
-
-    def test_user_model(self):
-        """Does basic model work?"""
-
-        u = User(
+        
+        self.u = User.signup(        
             email="test@test.com",
             username="testuser",
-            password="HASHED_PASSWORD"
+            password="HASHED_PASSWORD",
+            image_url=None
         )
-
-        db.session.add(u)
+        self.u.id = 1
         db.session.commit()
-
-        # User should have no messages & no followers
-        self.assertEqual(len(u.messages), 0)
-        self.assertEqual(len(u.followers), 0)
+        self.client = app.test_client()       
+    
+    def test_user_repr(self):
+        """ Test user repr function"""
+        self.assertEqual(str(self.u), "<User #1: testuser, test@test.com>")

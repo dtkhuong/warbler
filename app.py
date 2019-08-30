@@ -143,7 +143,7 @@ def users_show(user_id):
 
     # gets count of likes
     likes = Likes.query.filter_by(user_id=user_id).all()
-    
+
     return render_template('users/show.html',
                            user=user,
                            messages=messages,
@@ -335,9 +335,7 @@ def delete_like():
     msg_id = request.form["data-msg"]
 
     like_to_be_removed = Likes.query.filter(
-        and_(Likes.user_id == user_id,
-             Likes.msg_id == msg_id)).first()
-
+        and_(Likes.user_id == g.user.id, Likes.msg_id == msg_id)).first()
 
     db.session.delete(like_to_be_removed)
     db.session.commit()
@@ -350,6 +348,7 @@ def add_user_like():
     """Add a like"""
     user_id = request.form["data-user"]
     msg_id = request.form["data-msg"]
+    
 
     new_like = Likes(user_id=g.user.id, msg_id=msg_id)
 
@@ -367,8 +366,7 @@ def delete_user_like():
     msg_id = request.form["data-msg"]
 
     like_to_be_removed = Likes.query.filter(
-        and_(Likes.user_id == user_id,
-             Likes.msg_id == msg_id)).first()
+        and_(Likes.user_id == g.user.id, Likes.msg_id == msg_id)).first()
 
     db.session.delete(like_to_be_removed)
     db.session.commit()
@@ -384,8 +382,7 @@ def show_user_likes_page(user_id):
 
     likes = Likes.query.filter_by(user_id=user_id).all()
 
-    return render_template('users/show_user_likes.html',
-                           likes=likes)
+    return render_template('users/show_user_likes.html', likes=likes)
 
 
 ##############################################################################

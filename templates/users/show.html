@@ -1,41 +1,43 @@
 {% extends 'users/detail.html' %}
 {% block user_details %}
-  <div class="col-sm-6">
-    <ul class="list-group" id="messages">
+<div class="col-sm-6">
+  <ul class="list-group" id="messages">
 
-      {% for message in messages %}
+    {% for message in messages %}
 
-        <li class="list-group-item">
-          <a href="/messages/{{ message.id }}" class="message-link"/>
+    <li class="list-group-item">
+      <a href="/messages/{{ message.id }}" class="message-link" />
 
-          <a href="/users/{{ user.id }}">
-            <img src="{{ user.image_url }}" alt="user image" class="timeline-image">
-          </a>
+      <a href="/users/{{ user.id }}">
+        <img src="{{ user.image_url }}" alt="user image" class="timeline-image">
+      </a>
 
-          <div class="message-area">
-          
-            {% if message.likes %}
+      <div class="message-area">
+        {% if message.user.id != g.user.id %}
+        {% if message.likes %}
+  
             <form action="/user/unliking" method="POST">
               <input type="hidden" name="data-user" value="{{ message.user.id }}">
               <input type="hidden" name="data-msg" value="{{ message.id }}">
               <button class="star" type="submit"><i class="fas fa-star"></i></button>
             </form>
             {% else %}
-            <form action="/user/liking" method="POST">
-              <input type="hidden" name="data-user" value="{{ message.user.id }}">
-              <input type="hidden" name="data-msg" value="{{ message.id }}">
-              <button class="star" type="submit"><i class="far fa-star"></i></button>
-            </form>
-            {% endif %}
-            
-            <a href="/users/{{ user.id }}">@{{ user.username }}</a>
-            <span class="text-muted">{{ message.timestamp.strftime('%d %B %Y') }}</span>
-            <p>{{ message.text }}</p>
-          </div>
-        </li>
+        <form action="/user/liking" method="POST">
+          <input type="hidden" name="data-user" value="{{ message.user.id }}">
+          <input type="hidden" name="data-msg" value="{{ message.id }}">
+          <button class="star" type="submit"><i class="far fa-star"></i></button>
+        </form>
+        {% endif %}
+        {% endif %}
 
-      {% endfor %}
+        <a href="/users/{{ user.id }}">@{{ user.username }}</a>
+        <span class="text-muted">{{ message.timestamp.strftime('%d %B %Y') }}</span>
+        <p>{{ message.text }}</p>
+      </div>
+    </li>
 
-    </ul>
-  </div>
+    {% endfor %}
+
+  </ul>
+</div>
 {% endblock %}
