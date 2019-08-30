@@ -44,6 +44,9 @@ class Likes(db.Model):
         primary_key=True,
     )
 
+    users = db.relationship("User")
+
+    messages = db.relationship('Message')
 
 class User(db.Model):
     """User in the system."""
@@ -98,9 +101,10 @@ class User(db.Model):
         primaryjoin=(Follows.user_following_id == id),
         secondaryjoin=(Follows.user_being_followed_id == id))
 
-    likes = db.relationship("User",
-                            secondary="likes",
-                            primaryjoin=(Likes.user_id == id))
+    likes = db.relationship("Message",
+                            secondary="likes")
+                            # primaryjoin=(Likes.user_id == id),
+                            # secondaryjoin=(Likes.msg_id == messages.id))
 
     def __repr__(self):
         return f"<User #{self.id}: {self.username}, {self.email}>"
@@ -192,9 +196,10 @@ class Message(db.Model):
 
     user = db.relationship('User')
 
-    likes = db.relationship("Message",
-                            secondary="likes",
-                            primaryjoin=(Likes.msg_id == id))
+    likes = db.relationship("Likes")
+                            # secondary="likes",
+                            # primaryjoin=(Likes.msg_id == id),
+                            # secondaryjoin=(Likes.user_id == id))
 
 
 def connect_db(app):

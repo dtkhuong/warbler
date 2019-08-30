@@ -142,8 +142,8 @@ def users_show(user_id):
         Message.timestamp.desc()).limit(100).all())
 
     # gets count of likes
-    # likes = Likes.query.filter_by(user_who_liked_id=user_id).count()
-    likes = 0
+    likes = Likes.query.filter_by(user_id=user_id).all()
+    
     return render_template('users/show.html',
                            user=user,
                            messages=messages,
@@ -311,7 +311,7 @@ def add_like():
     user_id = request.form["data-user"]
     msg_id = request.form["data-msg"]
 
-    new_like = Likes(user_id=user_id, msg_id=msg_id)
+    new_like = Likes(user_id=g.user.id, msg_id=msg_id)
 
     db.session.add(new_like)
     db.session.commit()
@@ -351,7 +351,7 @@ def add_user_like():
     user_id = request.form["data-user"]
     msg_id = request.form["data-msg"]
 
-    new_like = Likes(user_id=user_id, msg_id=msg_id)
+    new_like = Likes(user_id=g.user.id, msg_id=msg_id)
 
     db.session.add(new_like)
     db.session.commit()
@@ -376,11 +376,16 @@ def delete_user_like():
     return redirect(f'/users/{user_id}')
 
 
-@app.route('/user/<user_id>/likes')
+@app.route('/users/<user_id>/likes')
 def show_user_likes_page(user_id):
     """ Display likes from user"""
 
-    user_likes = User.query.get(user_id).likes.all()
+    # user_likes = User.query.get(user_id).likes.all()
+
+    likes = Likes.query.filter_by(user_id=user_id).all()
+
+    return render_template('users/show_user_likes.html',
+                           likes=likes)
 
 
 ##############################################################################
